@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <title>{% block title %}{% endblock %}</title>
+
+<!--   Adding responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+</head>
+<body>
+
+  {% block body %}
+<!-- BODY GOES HERE -->
+  {% endblock %}
+
+    <!-- Show flashed messages -->
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="alert alert-warning">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- This is where the main content goes. -->
+    {% block content %}{% endblock %}
+
+</body>
+</html>
