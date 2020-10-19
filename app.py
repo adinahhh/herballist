@@ -1,6 +1,8 @@
 from flask import Flask, url_for, redirect, session, request, render_template
 from authlib.integrations.flask_client import OAuth
 
+from models import connect_to_db, db, User
+
 import os
 # import requests?
 
@@ -95,6 +97,7 @@ def authorize_google():
     # can use print() to see user_info, dont need to pass around google info in session cookie
     # could alternatively get user_info to create and store login info in db, put that into the cookie
     session['email'] = user_info['email']
+
     # session.permanent = True this will make session permanent even after browser is closed
     return redirect('/')
 
@@ -125,13 +128,30 @@ def logout():
         session.pop(key)
     return redirect('/')
 
+# below is sign up route
 @app.route('/sign-up', methods=['POST'])
 def signup():
-    email = request.form.get('email')
-    password = request.form.get('password')
+    """User registration; redirects user to their profile page"""
 
-    # utilize sessions here?
+    if request.method == 'POST':
+        first_name = request.form['first_name']
+        email = request.form['email']
+        password = request.form['password']
 
+    # define user from db
+    # check for password entered?
+    # TODO add regex to form to ensure email and password fit parameters
+    # error messages if password does not meet expectations?
+        if len(password) > 0:
+            new_user = User(first_name=first_name, email=email, password=password)
+        else:
+            return f"Please enter a valid password"
+    # add to session here
+        db.session.add(new_user)
+        db.session.commit()
+        print(new_user)
+
+    # update this so we are redirecting to user's profile page?
     return f"Hello {email}, its nice to meet you"
 
 #############
@@ -144,3 +164,13 @@ def signup():
 # TODO: add in modules for each registry/route for fb/google/twitter -- this
 # TODO: can consolidate how many routes i need to have in project?
 #############
+
+if __name__ == '__main__':
+
+    app.debug = True
+
+    connect_to_db(app)
+
+    #DebugToolbarExtension(app)
+
+    app.run(host='0.0.0.0')
