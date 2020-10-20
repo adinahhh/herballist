@@ -4,7 +4,7 @@ from authlib.integrations.flask_client import OAuth
 from models import connect_to_db, db, User
 
 import os
-# import requests?
+import bcrypt
 
 #running an instance of flask
 app = Flask(__name__)
@@ -137,13 +137,13 @@ def signup():
         first_name = request.form['first_name']
         email = request.form['email']
         password = request.form['password']
+        byte_password = password.encode("utf-8")
+        hashed_password = bcrypt.hashpw(byte_password, bcrypt.gensalt())
 
-    # define user from db
-    # check for password entered?
     # TODO add regex to form to ensure email and password fit parameters
     # error messages if password does not meet expectations?
-        if len(password) > 0:
-            new_user = User(first_name=first_name, email=email, password=password)
+        if hashed_password:
+            new_user = User(first_name=first_name, email=email, password=hashed_password)
         else:
             return f"Please enter a valid password"
     # add to session here
