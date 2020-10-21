@@ -1,4 +1,4 @@
-from flask import Flask, url_for, redirect, session, request, render_template
+from flask import Flask, url_for, redirect, session, request, render_template, flash
 from authlib.integrations.flask_client import OAuth
 
 from models import connect_to_db, db, User
@@ -55,9 +55,10 @@ twitter = oauth.register(
 
 @app.route('/')
 def hello_world():
+    """this route shows homepage"""
     # email = dict(session).get('email', None)
     # screen_name = dict(session).get('screen_name', None)
-    # # TODO redo below: am I rerouting to user's profile page?
+
     # # with a message "welcome back, {screen_name} {email}"
     # if email is not None:
     #     return f"Hey, {email}!"
@@ -124,21 +125,22 @@ def authorize_twitter():
 
 @app.route('/logout')
 def logout():
+    """logs out any user"""
+
     for key in list(session.keys()):
         session.pop(key)
     return redirect('/')
 
-# below is sign up route
+
 @app.route('/sign-up', methods=['POST'])
 def signup():
-    """User registration; redirects user to their profile page"""
+    """manual user registration; redirects user to their profile page"""
 
     if request.method == 'POST':
         first_name = request.form['first_name']
         email = request.form['email']
         password = request.form['password']
-        byte_password = password.encode("utf-8")
-        hashed_password = bcrypt.hashpw(byte_password, bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     # TODO add regex to form to ensure email and password fit parameters
     # error messages if password does not meet expectations?
@@ -151,8 +153,34 @@ def signup():
         db.session.commit()
         print(new_user)
 
-    # update this so we are redirecting to user's profile page?
+    # TODO: update this so we are redirecting to user's profile page
     return f"Hello {email}, its nice to meet you"
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    """logging in existing users who manually registered on app"""
+
+    # get user email from form
+    email = request.form.get('email')
+    password = request.form.get('password')
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    print(email)
+
+    # search db for user
+    existing_user = User.query.filter_by(email=email).first()
+
+    if not existing_user:
+        flash('No user found with this email. Please try again')
+        return redirect('/')
+
+    # compare password entered with password from db
+    if bcrypt.checkpw(password, hashed_password):
+        flash('Welcome back, {email}!')
+        return redirect('/')
+    else:
+        flash('Password does not match. Please try again.')
+
 
 #############
 # TODO check if i need to update token for google. search 'refresh_token' in docs
@@ -162,7 +190,8 @@ def signup():
 # TODO decide where I am collecting user's info for db-- in authorize routes?
 # TODO decide if I need the session info in "authorize" routes?
 # TODO: add in modules for each registry/route for fb/google/twitter -- this
-# TODO: can consolidate how many routes i need to have in project?
+# TODO: can consolidate how many routes i need to have in app; have a login module?
+# TODO: ensure emails saved in db are unique. querying for user based on email . one()
 #############
 
 if __name__ == '__main__':
