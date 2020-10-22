@@ -14,11 +14,11 @@
     Sign up for herbal list here:
     <form action="/sign-up" method="POST">
         <label>Email:</label>
-        <input type="text" name="email"><br>
+        <input type="text" name="email" required><br>
         <label>First Name:</label>
-        <input type=""text" name="first_name"></br>
+        <input type="text" name="first_name" required></br>
         <label>Password:</label>
-        <input type="text" name="password"><br>
+        <input type="text" name="password" required><br>
         <input type="submit">
     </form>
 </div>
@@ -28,7 +28,7 @@
 Login to your account here
 <form action='/login' method="POST">
     <label>Email:</label>
-    <input type="text" name="name"><br>
+    <input type="text" name="email"><br>
     <label>Password:</label>
     <input type="text" name="password"><br>
     <input type="submit">

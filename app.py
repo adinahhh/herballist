@@ -136,22 +136,21 @@ def logout():
 def signup():
     """manual user registration; redirects user to their profile page"""
 
-    if request.method == 'POST':
-        first_name = request.form['first_name']
-        email = request.form['email']
-        password = request.form['password']
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    first_name = request.form.get('first_name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     # TODO add regex to form to ensure email and password fit parameters
     # error messages if password does not meet expectations?
-        if hashed_password:
-            new_user = User(first_name=first_name, email=email, password=hashed_password)
-        else:
-            return f"Please enter a valid password"
+    if hashed_password:
+        new_user = User(first_name=first_name, email=email, password=hashed_password)
+    else:
+        return f"Please enter a valid password"
     # add to session here
-        db.session.add(new_user)
-        db.session.commit()
-        print(new_user)
+    db.session.add(new_user)
+    db.session.commit()
+    print(new_user)
 
     # TODO: update this so we are redirecting to user's profile page
     return f"Hello {email}, its nice to meet you"
@@ -165,21 +164,25 @@ def login():
     email = request.form.get('email')
     password = request.form.get('password')
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-    print(email)
 
     # search db for user
     existing_user = User.query.filter_by(email=email).first()
+    existing_password = existing_user.password
+    print(existing_password)
 
     if not existing_user:
         flash('No user found with this email. Please try again')
         return redirect('/')
 
     # compare password entered with password from db
-    if bcrypt.checkpw(password, hashed_password):
+    if bcrypt.checkpw(existing_password, hashed_password):
         flash('Welcome back, {email}!')
+        # TODO: redirect to user profile page
         return redirect('/')
     else:
         flash('Password does not match. Please try again.')
+        return redirect('/')
+
 
 
 #############
