@@ -53,6 +53,7 @@ twitter = oauth.register(
 #     client_kwargs = {'scope': 'name email'},
 # )
 
+
 @app.route('/')
 def hello_world():
     """this route shows homepage"""
@@ -66,12 +67,14 @@ def hello_world():
     #     return f"Welcome to my page {screen_name}"
     return render_template('homepage.html')
 
+
 # first route that gets hit
 @app.route('/login-google')
 def login_google():
     google = oauth.create_client('google')
     redirect_uri = url_for('authorize_google', _external=True)
     return google.authorize_redirect(redirect_uri)
+
 
 @app.route('/login-twitter')
 def login_twitter():
@@ -162,21 +165,20 @@ def login():
 
     # get user email from form
     email = request.form.get('email')
-    password = request.form.get('password')
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    password = (request.form.get('password')).encode('utf-8')
 
     # search db for user
     existing_user = User.query.filter_by(email=email).first()
     existing_password = existing_user.password
-    print(existing_password)
+    user_email = existing_user.email
 
     if not existing_user:
         flash('No user found with this email. Please try again')
         return redirect('/')
 
     # compare password entered with password from db
-    if bcrypt.checkpw(existing_password, hashed_password):
-        flash('Welcome back, {email}!')
+    if bcrypt.checkpw(password, existing_password):
+        flash(f'Welcome back, {user_email}!')
         # TODO: redirect to user profile page
         return redirect('/')
     else:
@@ -197,12 +199,9 @@ def login():
 # TODO: ensure emails saved in db are unique. querying for user based on email . one()
 #############
 
+
 if __name__ == '__main__':
-
     app.debug = True
-
     connect_to_db(app)
-
     #DebugToolbarExtension(app)
-
     app.run(host='0.0.0.0')
