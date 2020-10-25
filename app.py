@@ -112,9 +112,24 @@ def authorize_twitter():
     resp = twitter.get('account/verify_credentials.json')
     user_info = resp.json()
     # can do something here with token and profile
-    session['screen_name'] = user_info['screen_name']
+    username = user_info['screen_name']
+    first_name = user_info['name']
 
-    return redirect('/')
+    # adding info to db
+    # first see if username is in db already...
+    existing_user = User.query.filter_by(screen_name=username).first()
+    if existing_user:
+        # TODO: send to their profile page
+        session["user_id"] = existing_user.user_id
+        return redirect('/')
+    else:
+        # create a user in db
+        new_user = User(screen_name=username, first_name=first_name)
+        db.session.add(new_user)
+        db.session.commit()
+        # TODO: redirect to profile page
+        return redirect('/')
+
 
 # @app.route('/authorize-facebook')
 # def authorize_facebook():
@@ -131,9 +146,8 @@ def authorize_twitter():
 def logout():
     """logs out any user"""
 
-    # for key in list(session.keys()):
-    #     session.pop(key)
-    del session["user_id"]
+    for key in list(session.keys()):
+        session.pop(key)
     return redirect('/')
 
 
@@ -155,12 +169,11 @@ def signup():
     # add to db here
     db.session.add(new_user)
     db.session.commit()
-    print(new_user)
 
     # adding session
     user_id = new_user.user_id
     session["user_id"] = user_id
-    print(user_id)
+
     # TODO: update this so we are redirecting to user's profile page
     return f"Hello {email}, its nice to meet you"
 
@@ -205,6 +218,7 @@ def login():
 # TODO: add in modules for each registry/route for fb/google/twitter -- this
 # TODO: can consolidate how many routes i need to have in app; have a login module?
 # TODO: ensure emails saved in db are unique. querying for user based on email . one()
+# TODO: create a function for adding a user to db (im reusing db.add/db.commit in routes)
 #############
 
 
