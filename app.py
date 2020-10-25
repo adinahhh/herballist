@@ -100,7 +100,7 @@ def authorize_google():
     # do something with the token and profile
     # can use print() to see user_info, dont need to pass around google info in session cookie
     # could alternatively get user_info to create and store login info in db, put that into the cookie
-    session['email'] = user_info['email']
+
 
     # session.permanent = True this will make session permanent even after browser is closed
     return redirect('/')
@@ -113,6 +113,7 @@ def authorize_twitter():
     user_info = resp.json()
     # can do something here with token and profile
     session['screen_name'] = user_info['screen_name']
+
     return redirect('/')
 
 # @app.route('/authorize-facebook')
@@ -130,8 +131,9 @@ def authorize_twitter():
 def logout():
     """logs out any user"""
 
-    for key in list(session.keys()):
-        session.pop(key)
+    # for key in list(session.keys()):
+    #     session.pop(key)
+    del session["user_id"]
     return redirect('/')
 
 
@@ -150,11 +152,15 @@ def signup():
         new_user = User(first_name=first_name, email=email, password=hashed_password)
     else:
         return f"Please enter a valid password"
-    # add to session here
+    # add to db here
     db.session.add(new_user)
     db.session.commit()
     print(new_user)
 
+    # adding session
+    user_id = new_user.user_id
+    session["user_id"] = user_id
+    print(user_id)
     # TODO: update this so we are redirecting to user's profile page
     return f"Hello {email}, its nice to meet you"
 
@@ -171,6 +177,7 @@ def login():
     existing_user = User.query.filter_by(email=email).first()
     existing_password = existing_user.password
     user_email = existing_user.email
+    user_id = existing_user.user_id
 
     if not existing_user:
         flash('No user found with this email. Please try again')
@@ -179,6 +186,7 @@ def login():
     # compare password entered with password from db
     if bcrypt.checkpw(password, existing_password):
         flash(f'Welcome back, {user_email}!')
+        session["user_id"] = user_id
         # TODO: redirect to user profile page
         return redirect('/')
     else:
