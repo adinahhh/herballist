@@ -96,11 +96,22 @@ def authorize_google():
     token = google.authorize_access_token()
     resp = google.get('userinfo')
     user_info = resp.json()
-    print(user_info)
-    # do something with the token and profile
-    # can use print() to see user_info, dont need to pass around google info in session cookie
-    # could alternatively get user_info to create and store login info in db, put that into the cookie
-
+    email = user_info['email']
+    first_name = user_info['given_name']
+    # existing user?
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        # TODO: send to their profile page
+        session["user_id"] = existing_user.user_id
+        return redirect('/')
+    else:
+        # create a user in db
+        new_user = User(first_name=first_name, email=email)
+        db.session.add(new_user)
+        db.session.commit()
+        session["user_id"] = new_user.user_id
+        # TODO: redirect to profile page
+        return redirect('/')
 
     # session.permanent = True this will make session permanent even after browser is closed
     return redirect('/')
@@ -111,7 +122,6 @@ def authorize_twitter():
     token = twitter.authorize_access_token()
     resp = twitter.get('account/verify_credentials.json')
     user_info = resp.json()
-    # can do something here with token and profile
     username = user_info['screen_name']
     first_name = user_info['name']
 
@@ -127,6 +137,7 @@ def authorize_twitter():
         new_user = User(screen_name=username, first_name=first_name)
         db.session.add(new_user)
         db.session.commit()
+        session["user_id"] = new_user.user_id
         # TODO: redirect to profile page
         return redirect('/')
 
