@@ -14,7 +14,7 @@ class User(db.Model):
     first_name = db.Column(db.String(30), nullable=True)
     email = db.Column(db.String(75), nullable=True)
     screen_name = db.Column(db.String(30), nullable=True)
-    password = db.Column(db.LargeBinary, nullable=False)
+    password = db.Column(db.LargeBinary, nullable=True)
 
     def __repr__(self):
         """provide info about user"""
