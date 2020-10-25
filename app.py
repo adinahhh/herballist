@@ -98,20 +98,18 @@ def authorize_google():
     user_info = resp.json()
     email = user_info['email']
     first_name = user_info['given_name']
-    # existing user?
+    # check for existing user
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        # TODO: send to their profile page
         session["user_id"] = existing_user.user_id
-        return redirect('/')
+        return redirect(f'/user/{existing_user.user_id}')
     else:
         # create a user in db
         new_user = User(first_name=first_name, email=email)
         db.session.add(new_user)
         db.session.commit()
         session["user_id"] = new_user.user_id
-        # TODO: redirect to profile page
-        return redirect('/')
+        return redirect(f'/user/{new_user.user_id}')
 
     # session.permanent = True this will make session permanent even after browser is closed
     return redirect('/')
@@ -129,17 +127,15 @@ def authorize_twitter():
     # first see if username is in db already...
     existing_user = User.query.filter_by(screen_name=username).first()
     if existing_user:
-        # TODO: send to their profile page
         session["user_id"] = existing_user.user_id
-        return redirect('/')
+        return redirect(f'/user/{existing_user.user_id}')
     else:
         # create a user in db
         new_user = User(screen_name=username, first_name=first_name)
         db.session.add(new_user)
         db.session.commit()
         session["user_id"] = new_user.user_id
-        # TODO: redirect to profile page
-        return redirect('/')
+        return redirect(f'/user/{new_user.user_id}')
 
 
 # @app.route('/authorize-facebook')
@@ -149,9 +145,9 @@ def authorize_twitter():
 #     resp = facebook.get('account/verify_credentials.json')
 #     user_info = resp.json()
 #     print(user_info)
-#     # can do something here with token and profile
-#     # session['email'] = user_info['email']
+#
 #     return redirect('/')
+
 
 @app.route('/logout')
 def logout():
@@ -185,8 +181,7 @@ def signup():
     user_id = new_user.user_id
     session["user_id"] = user_id
 
-    # TODO: update this so we are redirecting to user's profile page
-    return f"Hello {email}, its nice to meet you"
+    return redirect(f'/user/{user_id}')
 
 
 @app.route('/login', methods=['POST'])
@@ -209,14 +204,22 @@ def login():
 
     # compare password entered with password from db
     if bcrypt.checkpw(password, existing_password):
-        flash(f'Welcome back, {user_email}!')
+        # flash(f'Welcome back, {user_email}!')
         session["user_id"] = user_id
-        # TODO: redirect to user profile page
-        return redirect('/')
+        return redirect(f'/user/{user_id}')
     else:
         flash('Password does not match. Please try again.')
         return redirect('/')
 
+
+@app.route('/user/<int:user_id>')
+def user_profile(user_id):
+    """logged in user's profile page"""
+    # for now, only using user_id
+    # with future functionality for saving herbs, will query db for that
+    # and return onto page; one to many relationship
+    first_name = (User.query.filter_by(user_id=user_id).first()).first_name
+    return render_template('profile-page.html', first_name=first_name)
 
 
 #############
@@ -228,7 +231,6 @@ def login():
 # TODO decide if I need the session info in "authorize" routes?
 # TODO: add in modules for each registry/route for fb/google/twitter -- this
 # TODO: can consolidate how many routes i need to have in app; have a login module?
-# TODO: ensure emails saved in db are unique. querying for user based on email . one()
 # TODO: create a function for adding a user to db (im reusing db.add/db.commit in routes)
 #############
 
