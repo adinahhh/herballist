@@ -106,13 +106,13 @@ def authorize_google():
     else:
         # create a user in db
         new_user = User(first_name=first_name, email=email)
-        db.session.add(new_user)
-        db.session.commit()
+        add_user_db(new_user)
         session["user_id"] = new_user.user_id
         return redirect(f'/user/{new_user.user_id}')
 
     # session.permanent = True this will make session permanent even after browser is closed
     return redirect('/')
+
 
 @app.route('/authorize-twitter')
 def authorize_twitter():
@@ -132,8 +132,7 @@ def authorize_twitter():
     else:
         # create a user in db
         new_user = User(screen_name=username, first_name=first_name)
-        db.session.add(new_user)
-        db.session.commit()
+        add_user_db(new_user)
         session["user_id"] = new_user.user_id
         return redirect(f'/user/{new_user.user_id}')
 
@@ -173,9 +172,9 @@ def signup():
         new_user = User(first_name=first_name, email=email, password=hashed_password)
     else:
         return f"Please enter a valid password"
+
     # add to db here
-    db.session.add(new_user)
-    db.session.commit()
+    add_user_db(new_user)
 
     # adding session
     user_id = new_user.user_id
@@ -183,6 +182,13 @@ def signup():
 
     return redirect(f'/user/{user_id}')
 
+
+def add_user_db(new_user):
+    """adds user to db"""
+
+    db.session.add(new_user)
+    db.session.commit()
+    pass
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -195,7 +201,7 @@ def login():
     # search db for user
     existing_user = User.query.filter_by(email=email).first()
     existing_password = existing_user.password
-    user_email = existing_user.email
+    # user_email = existing_user.email
     user_id = existing_user.user_id
 
     if not existing_user:
@@ -218,18 +224,15 @@ def user_profile(user_id):
     # for now, only using user_id
     # with future functionality for saving herbs, will query db for that
     # and return onto page; one to many relationship
+
     first_name = (User.query.filter_by(user_id=user_id).first()).first_name
     return render_template('profile-page.html', first_name=first_name)
 
 
 #############
 # TODO check if i need to update token for google. search 'refresh_token' in docs
-# TODO: login below
-# on homepage.html, can have a form that offers different login options, if user clicks on google,
-# will redirect them to route "/login-google", same for twitter
-# TODO decide where I am collecting user's info for db-- in authorize routes?
-# TODO decide if I need the session info in "authorize" routes?
-# TODO: add in modules for each registry/route for fb/google/twitter -- this
+# TODO: utilize ajax for google/twitter/fb buttons on homepage
+# TODO: add in module for each registry/route for fb/google/twitter -- this
 # TODO: can consolidate how many routes i need to have in app; have a login module?
 # TODO: create a function for adding a user to db (im reusing db.add/db.commit in routes)
 #############
