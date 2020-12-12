@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy, Model
 
+
 db = SQLAlchemy()
 app = Flask(__name__)
 
@@ -20,7 +21,6 @@ class User(db.Model):
         """provide info about user"""
 
         return f"User id: {self.user_id} email: {self.email}"
-
 
     # look into other methods needed
     # get user id
