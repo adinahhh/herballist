@@ -1,11 +1,9 @@
-from flask import Flask, url_for, redirect, session, request, render_template, flash
+from flask import Flask, url_for, redirect, session, render_template
 from authlib.integrations.flask_client import OAuth
-
 from models import connect_to_db, db, User
-
 import os
-
 from login.login_routes import login_blueprint
+
 
 #running an instance of flask
 app = Flask(__name__)
@@ -43,19 +41,6 @@ twitter = oauth.register(
     client_kwargs = None,
 )
 
-# TODO: come back to trying out oauth for fb
-# facebook = oauth.register(
-#     name = 'facebook',
-#     client_id = os.environ['FACEBOOK_CLIENT_ID'],
-#     client_secret = os.environ['FACEBOOK_CLIENT_SECRET'],
-#     access_token_url = 'https://graph.facebook.com/v8.0/oauth/access_token',
-#     access_token_params = None,
-#     authorize_url = 'https://www.facebook.com/v8.0/dialog/oauth',
-#     authorize_params = None,
-#     api_base_url = 'https://www.graph.facebook.com/me',
-#     client_kwargs = {'scope': 'name email'},
-# )
-
 
 @app.route('/')
 def hello_world():
@@ -71,7 +56,6 @@ def hello_world():
     return render_template('homepage.html')
 
 
-# first route that gets hit
 @app.route('/login-google')
 def login_google():
     google = oauth.create_client('google')
@@ -84,12 +68,6 @@ def login_twitter():
     twitter = oauth.create_client('twitter')
     redirect_uri = url_for('authorize_twitter', _external=True)
     return twitter.authorize_redirect(redirect_uri)
-
-# @app.route('/login-facebook')
-# def login_facebook():
-#     facebook = oauth.create_client('facebook')
-#     redirect_uri = url_for('authorize_facebook', _external=True)
-#     return facebook.authorize_redirect(redirect_uri)
 
 
 # route that user is redirected to if authentication is successful
@@ -140,17 +118,6 @@ def authorize_twitter():
         return redirect(f'/user/{new_user.user_id}')
 
 
-# @app.route('/authorize-facebook')
-# def authorize_facebook():
-#     facebook = oauth.create_client('facebook')
-#     token = facebook.authorize_access_token()
-#     resp = facebook.get('account/verify_credentials.json')
-#     user_info = resp.json()
-#     print(user_info)
-#
-#     return redirect('/')
-
-
 def add_user_db(new_user):
     """adds user to db"""
 
@@ -175,8 +142,7 @@ def user_profile(user_id):
 #############
 # TODO check if i need to update token for google. search 'refresh_token' in docs
 # TODO: utilize ajax for google/twitter/fb buttons on homepage
-# TODO: add in module for each registry/route for fb/google/twitter
-# TODO: add blueprints to consolidate how many routes i need to have in app; have a login module?
+# TODO: add in blueprint for each registry/route for fb/google/twitter
 # TODO: have a delete function for user to delete their info from db
 #############
 
